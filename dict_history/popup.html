@@ -1,0 +1,140 @@
+ <html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>english words you have searched</title>
+<style type="text/css">
+body {
+  min-width:120px;
+  padding-right:1em;
+  text-align:right;
+  overflow-x:hidden;
+  overflow-y:scroll;
+  line-height:1.4em;
+  background-color:#DDDDFF;
+}
+
+.cancelButton {
+  color: red;
+  width: 1em;
+}
+
+.speakButton {
+  margin-left: 0.3em;
+  font-weight: bold;
+}
+
+.buttons {
+  font-size:0.8em;
+  float: left;
+}
+
+</style>
+</head>
+<body>
+<div id="content">
+
+</div>
+<script type="text/javascript">
+MAX_LOG_SIZE = 30;
+var bg = chrome.extension.getBackgroundPage();
+var wordList = bg.localStorage;
+var outputWords = {};
+if (!(typeof wordList['index'] == 'undefined')){
+	var index = eval(wordList['index']);
+	var contentBody = document.getElementById('content');
+	for (var i=0; i<MAX_LOG_SIZE; i++) {
+		console.log(typeof wordList[index] + ' ' + index);
+		if (typeof wordList[index] == 'undefined'
+				|| wordList[index].length == 0
+				|| typeof outputWords[wordList[index]] != 'undefined') {
+			index--;
+			if (index < 0) {
+				index = MAX_LOG_SIZE - 1;
+			}continue;
+		} else {
+			outputWords[wordList[index]] = true;
+		}
+		var dom = document.createElement('div');
+		dom.className = 'wordContainer';
+		dom.id = wordList[index];
+		
+		var span = document.createElement('span');
+		var url = 'http://eow.alc.co.jp/' + wordList[index];
+		span.innerHTML = '<a href="' + url + '" target="_blank">' 
+			+ wordList[index] + '</a>';
+		dom.appendChild(span);
+		dom.addEventListener('mouseover', addButtons, false);
+		dom.addEventListener('mouseout', dismissButtons, false);
+		contentBody.appendChild(dom);
+		index--;
+		if (index < 0) {
+			index = MAX_LOG_SIZE - 1;
+		}
+	}
+	
+	/**
+	 * add cancel button and speak button left of the word.
+	 */
+	function addButtons(event) {
+		var parentDiv = getWordContainer(event.target);
+		if (parentDiv.isCancelButton) {
+			return;
+		}
+		cancel = document.createElement('span');
+		cancel.className = 'cancelButton';
+		cancel.innerHTML = '×';
+		cancel.addEventListener('click', dismissWord, false);
+		
+		tts = document.createElement('span');
+		tts.className = 'speakButton';
+		tts.innerHTML = '<';
+		tts.addEventListener('click', speakWord, false);
+		
+		buttons = document.createElement('div');
+		buttons.className = 'buttons';
+		buttons.appendChild(cancel);
+		buttons.appendChild(tts);
+		
+		parentDiv.insertBefore(buttons, parentDiv.childNodes[0]);
+		parentDiv.isCancelButton = true;
+	}
+	
+	function dismissButtons(event) {
+		var parentDiv = getWordContainer(event.target);
+		var outParentDiv = getWordContainer(event.relatedTarget);
+		
+		if (outParentDiv != null && parentDiv.id == outParentDiv.id) {
+			return ;
+		}
+		
+		if (!parentDiv.isCancelButton) {
+			return;
+		}
+		parentDiv.removeChild(parentDiv.childNodes[0]);
+		parentDiv.isCancelButton = false;
+	}
+	
+	function dismissWord(event) {
+		var parentDiv = getWordContainer(event.target);
+		parentDiv.parentNode.removeChild(parentDiv);
+		bg.deleteWord(parentDiv.id);
+	}
+	
+	function getWordContainer(element) {
+		var dom = element;
+		for (i = 0; i < 5; i++) {
+			if (typeof dom == 'undefined' || dom == null) return null;
+			if (dom.className == 'wordContainer') return dom;
+			dom = dom.parentNode;
+		}
+		return null;
+	}
+	
+	function speakWord(event) {
+		var parentDiv = getWordContainer(event.target);
+		chrome.tts.speak(parentDiv.id, {'lang': 'en-US'});
+	}
+}
+</script>
+</body>
+</html>

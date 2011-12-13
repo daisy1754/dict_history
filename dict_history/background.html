@@ -1,0 +1,27 @@
+<html>
+	<script>
+		MAX_LOG_SIZE = 30;
+		chrome.extension.onRequest.addListener(
+			function(request, sender, sendResponse) {
+				if (typeof localStorage['index'] == 'undefined'){
+					localStorage['index'] = -1;
+				} 
+				var index = eval(localStorage['index']) + 1;
+				if (index >= MAX_LOG_SIZE) {
+					index = 0;
+				}
+				
+				localStorage[index] = request;
+				localStorage['index'] = index;
+				sendResponse({});
+			}
+		);
+		function deleteWord(word) {
+			for (i=0; i<MAX_LOG_SIZE; i++) {
+				if (typeof localStorage[i] == 'undefined') continue;
+				if (localStorage[i] == word)
+					localStorage[i] = '';
+			}
+		}
+	</script>
+</html>

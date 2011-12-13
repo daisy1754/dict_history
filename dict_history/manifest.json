@@ -1,0 +1,32 @@
+{
+  "name": "Dict History Logger",
+  "version": "1.0",
+  "description": 
+  		"オンライン英和辞典で検索された英単語を記録する拡張機能です。",
+  "content_scripts": [
+	  {
+	  /*
+	  	arc, weblio, goo, Longman, excite
+	  */
+	    "matches": ["http://eow.alc.co.jp/*",
+	    			"http://ejje.weblio.jp/content/*",
+	    			"http://dictionary.goo.ne.jp/srch/ej/*",
+	    			"http://www.ldoceonline.com/search/*",
+	    			"http://www.excite.co.jp/dictionary/english_japanese/*"],
+	    "js": ["english_log.js"]
+	  }
+  ],
+  "icons": {
+	  "128": "icon128.png",
+	  "16": "icon16.png",
+	  "32": "icon32.png",
+      "48": "icon48.png"
+  },
+  "permissions": ["tts"],
+  "browser_action": {
+  	"default_icon": "icon32.png",
+  	"default_title": "Dict History",
+  	"popup": "popup.html"
+  },
+  "background_page": "background.html"
+}
