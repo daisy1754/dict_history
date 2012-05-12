@@ -4,13 +4,23 @@ MAX_LOG_SIZE = getMaxLogSize();
 
 chrome.extension.onRequest.addListener(
 	function(request, sender, sendResponse) {
+		deleteWord(request);
+		
 		var index = getIndex() + 1;
 		if (index >= MAX_LOG_SIZE) {
 			index = 0;
 		}
 		
+		var prevWord = localStorage[index];
+		if (!(typeof prevWord == 'undefined')) {
+			deleteWordInfo(prevWord);
+		}
+		
 		localStorage[index] = request;
 		localStorage['index'] = index;
+		
+		setWordInfo(request);
+		
 		sendResponse({});
 	}
 );
@@ -19,6 +29,7 @@ function deleteWord(word) {
 	for (var i=0; i<MAX_LOG_SIZE; i++) {
 		if (typeof localStorage[i] == 'undefined') continue;
 		if (localStorage[i] == word) {
+			deleteWordInfo(localStorage[i]);
 			var index = getIndex();
 			if (i <= index) {
 				for (var j=i;j<index;j++)
@@ -32,15 +43,26 @@ function deleteWord(word) {
 			}
 			localStorage[index] = undefined;
 			localStorage['index'] = index - 1 < 0 ? 0 : index - 1;
+			return true;
 		}
 	}
+	return false;
 }
 
 function getMaxLogSize() {
 	if (typeof localStorage['numRecordingWords'] == 'undefined'){
-		return 30; // default value
+		return 50; // default value
 	} else {
 		return eval(localStorage['numRecordingWords']);
+	}
+}
+
+function getTestInterval() {
+	if (typeof localStorage['testInterval'] == 'undefined'){
+		localStorage['testInterval'] = 60 * 24;
+		return 60 * 24; // default value
+	} else {
+		return eval(localStorage['testInterval']);
 	}
 }
 
@@ -49,6 +71,20 @@ function getIndex() {
 		localStorage['index'] = -1; // lazy initialization
 	} 
 	return eval(localStorage['index']);
+}
+
+function getCurrentTimeInMin () {
+	return Date.now() / (1000 * 60);
+}
+
+function setWordInfo(word) {
+	localStorage['_exp_' + word] = getCurrentTimeInMin() + getTestInterval();
+	localStorage['_cnt_' + word] = 0;
+}
+
+function deleteWordInfo(word) {
+	localStorage.removeItem('_exp_' + word); // expires
+	localStorage.removeItem('_cnt_' + word); // count
 }
 </script>
 </html>

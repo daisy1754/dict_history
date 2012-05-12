@@ -6,13 +6,19 @@
 <body onload="onload()">
 <h1>dict history logger options</h1>
 <form>
+<!--
 <label for="number_of_words_to_remember">Number of words to remember (from 1 to 100): </label>
 <input type="text" id="number_of_words_to_remember" />
 <br />
+-->
 <label for="if_do_test">Do test for: </label>
 <input type="radio" name="do_test" value="all" id="radio_do_test_all"/>All words
 <input type="radio" name="do_test" value="selected" id="radio_do_test_selected"/>Selected words
 <input type="radio" name="do_test" value="no" id="radio_do_test_no"/>No word
+<br>
+<label for="test-interval">Test interval: </label>
+<input type="text" id="test-interval" />
+<br>
 </form>
 </body>
 </html>

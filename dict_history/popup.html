@@ -26,6 +26,7 @@ if (index >= 0){
 				index = MAX_LOG_SIZE - 1;
 			}continue;
 		} else {
+			console.log(index + '|' + wordList[index]);
 			outputWords[wordList[index]] = true;
 		}
 		var dom = document.createElement('div');
