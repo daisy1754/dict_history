@@ -3,15 +3,16 @@
 <title>options - dict history logger</title>
 <script type="text/javascript" src="options.js"></script>
 </head>
-<body>
+<body onload="onload()">
 <h1>dict history logger options</h1>
 <form>
-<label for="number_of_remembering">Number of words to remember: </label>
-<input type="text" id="number_of_remembering" />
+<label for="number_of_words_to_remember">Number of words to remember (from 1 to 100): </label>
+<input type="text" id="number_of_words_to_remember" />
 <br />
-<label for="if_do_test">Do test: </label>
-<input type="radio" name="if_do_test" value="true" />Yes
-<input type="radio" name="if_do_test" value="false" />No 
+<label for="if_do_test">Do test for: </label>
+<input type="radio" name="do_test" value="all" id="radio_do_test_all"/>All words
+<input type="radio" name="do_test" value="selected" id="radio_do_test_selected"/>Selected words
+<input type="radio" name="do_test" value="no" id="radio_do_test_no"/>No word
 </form>
 </body>
 </html>

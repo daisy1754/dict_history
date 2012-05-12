@@ -9,12 +9,12 @@
 
 </div>
 <script type="text/javascript">
-MAX_LOG_SIZE = 30;
 var bg = chrome.extension.getBackgroundPage();
+MAX_LOG_SIZE = bg.getMaxLogSize();
 var wordList = bg.localStorage;
 var outputWords = {};
-if (!(typeof wordList['index'] == 'undefined')){
-	var index = eval(wordList['index']);
+var index = bg.getIndex();
+if (index >= 0){
 	var contentBody = document.getElementById('content');
 	for (var i=0; i<MAX_LOG_SIZE; i++) {
 		console.log(typeof wordList[index] + ' ' + index);
