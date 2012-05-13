@@ -4,41 +4,55 @@ MAX_LOG_SIZE = getMaxLogSize();
 
 chrome.extension.onRequest.addListener(
 	function(request, sender, sendResponse) {
-		deleteWord(request);
-		
-		var index = getIndex() + 1;
-		if (index >= MAX_LOG_SIZE) {
-			index = 0;
+		var split = request.split(":");
+		var op = split[0];
+		var word = split[1];
+		if (op == "add") {
+			addWord(word);
+		} else if (op == "remove") {
+			deleteWord(word);
 		}
-		
-		var prevWord = localStorage[index];
-		if (!(typeof prevWord == 'undefined')) {
-			deleteWordInfo(prevWord);
-		}
-		
-		localStorage[index] = request;
-		localStorage['index'] = index;
-		
-		setWordInfo(request);
 		
 		sendResponse({});
 	}
 );
 
+function addWord(word) {
+	deleteWord(word);
+		
+	var index = getIndex() + 1;
+	if (index >= MAX_LOG_SIZE) {
+		index = 0;
+	}
+	
+	var prevWord = localStorage[index];
+	if (!(typeof prevWord == 'undefined')) {
+		deleteWordInfo(prevWord);
+	}
+	
+	localStorage[index] = word;
+	setWordInfo(word);
+	localStorage['index'] = index;
+	
+	checkExpires();
+}
+
 function deleteWord(word) {
-	for (var i=0; i<MAX_LOG_SIZE; i++) {
-		if (typeof localStorage[i] == 'undefined') continue;
+	for (var i = 0; i < MAX_LOG_SIZE; i++) {
+		if (typeof localStorage[i] == 'undefined'
+			 	|| localStorage[i] == 'undefined') 
+			 continue;
 		if (localStorage[i] == word) {
 			deleteWordInfo(localStorage[i]);
 			var index = getIndex();
 			if (i <= index) {
-				for (var j=i;j<index;j++)
+				for (var j = i; j < index; j++)
 					localStorage[j] = localStorage[j+1];
 			} else {
-				for (var j=i;j<MAX_LOG_SIZE;j++)
+				for (var j = i; j < MAX_LOG_SIZE; j++)
 					localStorage[j] = localStorage[j+1];
 				localStorage[MAX_LOG_SIZE - 1] = localStorage[0];
-				for (var j=0;j<index;j++)
+				for (var j = 0; j < index; j++)
 					localStorage[j] = localStorage[j+1];
 			}
 			localStorage[index] = undefined;
@@ -58,7 +72,7 @@ function getMaxLogSize() {
 }
 
 function getTestInterval() {
-	if (typeof localStorage['testInterval'] == 'undefined'){
+	if (typeof localStorage['testInterval'] == 'undefined'{
 		localStorage['testInterval'] = 60 * 24;
 		return 60 * 24; // default value
 	} else {
@@ -73,18 +87,39 @@ function getIndex() {
 	return eval(localStorage['index']);
 }
 
-function getCurrentTimeInMin () {
+function getCurrentTimeInMin() {
 	return Date.now() / (1000 * 60);
 }
 
 function setWordInfo(word) {
 	localStorage['_exp_' + word] = getCurrentTimeInMin() + getTestInterval();
 	localStorage['_cnt_' + word] = 0;
+	localStorage['_tst_' + word] = true;
 }
 
 function deleteWordInfo(word) {
 	localStorage.removeItem('_exp_' + word); // expires
 	localStorage.removeItem('_cnt_' + word); // count
+}
+
+function checkExpires() {
+	var currentTime = getCurrentTimeInMin();
+	var wordToTest = [];
+	for (var i = 0; i < MAX_LOG_SIZE; i++) {
+		var word = localStorage[i];
+		if (typeof word == 'undefined' || word == 'undefined')
+			continue;
+		var wordExpire = localStorage['_exp_' + word];
+		var doTest = localStorage['_tst_' + word];
+		if (typeof wordExpire != 'undefined' && doTest && wordExpire < currentTime + getTestInterval()) {
+			wordToTest.push(word);
+		}
+	}
+	localStorage['wordToTest'] = JSON.stringify(wordToTest);
+	if (wordToTest.length)
+		chrome.browserAction.setBadgeText({"text": '' + wordToTest.length});
+	else
+		chrome.browserAction.setBadgeText({"text": ''});
 }
 </script>
 </html>
