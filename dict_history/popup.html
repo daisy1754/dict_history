@@ -133,7 +133,7 @@ function startTest(wordsToTest) {
 
 function showWordToTest(word, parent) {
 	var wordBox = document.createElement('div');
-	wordBox.id = 'wordBox';
+	wordBox.id = 'test-wordBox';
 	wordBox.innerHTML = word;
 	wordBox.addEventListener(
 		'click', function(){
@@ -145,7 +145,7 @@ function showWordToTest(word, parent) {
 
 function fetchWordMeaning(word, parent) {
 	var meaningBox = document.createElement('div');
-	meaningBox.id = 'meaningBox';
+	meaningBox.id = 'test-meaningBox';
 	meaningBox.innerHTML = 'nowLoading...';
 	parent.appendChild(meaningBox);
 	getJapaneseTranslation(word);
@@ -203,15 +203,22 @@ function onItemListResponse(word, request) {
 }
 
 function showWordMeaning(word, meaning) {
-	var meaningBox = document.getElementById('meaningBox');
+	var meaningBox = document.getElementById('test-meaningBox');
 	meaningBox.innerHTML = '';
+	var originalWordBlock = document.createElement('div');
+	originalWordBlock.id = 'test-originalWord';
+	originalWordBlock.innerHTML = word;
+	meaningBox.appendChild(originalWordBlock);
 	var meaningBlock = document.createElement('div');
+	meaningBlock.id = 'test-meaningBlock';
 	meaningBlock.innerHTML = meaning;
 	meaningBox.appendChild(meaningBlock);
 	var okSpan = document.createElement('span');
 	var ngSpan = document.createElement('span');
 	okSpan.innerHTML = '覚えた';
 	ngSpan.innerHTML = 'まだ';
+	okSpan.className = 'test-resultButton';
+	ngSpan.className = 'test-resultButton';
 	meaningBox.appendChild(okSpan);
 	meaningBox.appendChild(ngSpan);
 	okSpan.addEventListener('click', function(){testFinished(word, false);}, false);
@@ -222,7 +229,7 @@ function testFinished(word, testOnceMore) {
 	var bg = chrome.extension.getBackgroundPage();
 	bg.doneTest(word, testOnceMore);
 	var testBox = document.getElementById('testBox');
-	var meaningBox = document.getElementById('meaningBox');
+	var meaningBox = document.getElementById('test-meaningBox');
 	testBox.removeChild(meaningBox);
 	wordsToTest = testBox.wordsToTest;
 	var currentWordIndex = wordsToTest.indexOf(word);

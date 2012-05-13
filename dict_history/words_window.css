@@ -27,3 +27,34 @@ body {
   font-size:0.8em;
   float: left;
 }
+
+#testBox {
+	width: 300px;
+}
+
+#test-wordBox {
+	text-align: center;
+}
+
+#test-meaningBox {
+}
+
+#test-originalWord {
+	text-align: left;
+	font-size: 0.8em;
+}
+
+#test-meaningBlock {
+	text-align:left;
+	padding-bottom: 5px;
+	border-bottom: 1px solid #333;
+	margin-bottom: 5px;
+}
+
+.test-resultButton {
+	background-color: #cfcfcf;
+	border: 1px solid #555;
+	padding: 5px;
+	margin: 5px;
+}
+
