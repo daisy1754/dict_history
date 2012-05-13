@@ -17,7 +17,6 @@ var index = bg.getIndex();
 if (index >= 0){
 	var contentBody = document.getElementById('content');
 	for (var i=0; i<MAX_LOG_SIZE; i++) {
-		console.log(typeof wordList[index] + ' ' + index);
 		if (typeof wordList[index] == 'undefined'
 				|| wordList[index].length == 0
 				|| typeof outputWords[wordList[index]] != 'undefined') {
@@ -26,7 +25,6 @@ if (index >= 0){
 				index = MAX_LOG_SIZE - 1;
 			}continue;
 		} else {
-			console.log(index + '|' + wordList[index]);
 			outputWords[wordList[index]] = true;
 		}
 		var dom = document.createElement('div');
@@ -55,15 +53,16 @@ function addButtons(event) {
 	if (parentDiv.isCancelButton) {
 		return;
 	}
-	cancel = document.createElement('span');
+	var cancel = document.createElement('span');
 	cancel.className = 'cancelButton';
 	cancel.innerHTML = '×';
 	cancel.addEventListener('click', dismissWord, false);
 	
-	tts = document.createElement('span');
+	var tts = document.createElement('span');
 	tts.className = 'speakButton';
 	tts.innerHTML = '<';
 	tts.addEventListener('click', speakWord, false);
+	
 	
 	buttons = document.createElement('div');
 	buttons.className = 'buttons';
@@ -110,6 +109,59 @@ function getWordContainer(element) {
 function speakWord(event) {
 	var parentDiv = getWordContainer(event.target);
 	chrome.tts.speak(parentDiv.id, {'lang': 'en-US'});
+}
+
+function getJapaneseTranslation(word) {
+	var searchUrl = "http://public.dejizo.jp/NetDicV09.asmx/SearchDicItemLite?"
+		+ "Dic=EJdict&Scope=HEADWORD&Prof=xml&Match=EXACT&Merge=OR&PageSize=1&"
+		+ "PageIndex=0&Word=" + word;
+	var request = new XMLHttpRequest();
+	request.open("GET", searchUrl, true);
+	request.onreadystatechange = function(){onItemListResponse(request);};
+  	request.send(null);
+}
+
+function onItemListResponse(request) {
+	if (request.readyState == 4 && request.status == 200) {
+		var xml = request.responseXML;
+		var nodes = xml.getElementsByTagName('ItemID');
+		if (nodes.length == 0) {
+		// TODO
+			console.log('no word find');
+		}
+		var idValue = nodes[0].firstChild.nodeValue;	
+		var itemUrl = "http://public.dejizo.jp/NetDicV09.asmx/GetDicItemLite?"
+			+ "Dic=EJdict&Loc=0&Prof=xml&Item=" + idValue; 
+		console.log(itemUrl); 	
+		var request = new XMLHttpRequest();
+		request.open("GET", itemUrl, true);
+		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status == 200) {
+				var xml = request.responseXML;
+				console.log(xml);
+				var nodes = xml.getElementsByTagName('div');
+				for (var i = 0; i < nodes.length; i++) {
+					if (nodes[i].hasAttribute('class') 
+							&& nodes[i].getAttribute('class') == 'NetDicBody') {
+						var meanings = nodes[i].getElementsByTagName('div');
+						if (meanings.length > 0) {
+							var meaning = meanings[0].firstChild.data;
+							var contentBody = document.getElementById('content');
+					
+							contentBody.innerHTML = meaning;
+							return;
+						}
+					}
+				}
+					
+				// TODO
+				console.log('no result');
+				// error handling
+				
+			}
+		}
+  		request.send(null);
+    }
 }
 </script>
 </body>

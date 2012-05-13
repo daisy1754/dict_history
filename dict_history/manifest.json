@@ -23,7 +23,7 @@
       "48": "icon48.png"
   },
   "options_page": "options.html",
-  "permissions": ["tts"],
+  "permissions": ["tts", "http://public.dejizo.jp/*"],
   "browser_action": {
   	"default_icon": "icon32.png",
   	"default_title": "Dict History",

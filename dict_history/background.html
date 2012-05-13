@@ -72,7 +72,7 @@ function getMaxLogSize() {
 }
 
 function getTestInterval() {
-	if (typeof localStorage['testInterval'] == 'undefined'{
+	if (typeof localStorage['testInterval'] == 'undefined') {
 		localStorage['testInterval'] = 60 * 24;
 		return 60 * 24; // default value
 	} else {
