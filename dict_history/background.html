@@ -102,6 +102,15 @@ function deleteWordInfo(word) {
 	localStorage.removeItem('_cnt_' + word); // count
 }
 
+function doneTest(word, testOnceMore) {
+	if (testOnceMore) {
+		var currentCount = parseInt(localStorage['_cnt_' + word]) + 1;
+		localStorage['_exp_' + word] 
+			= getCurrentTimeInMin() + getTestInterval() * currentCount;
+		localStorage['_cnt_' + word] = currentCount;
+	}
+}
+
 function checkExpires() {
 	var currentTime = getCurrentTimeInMin();
 	var wordToTest = [];
@@ -116,10 +125,11 @@ function checkExpires() {
 		}
 	}
 	localStorage['wordToTest'] = JSON.stringify(wordToTest);
-	if (wordToTest.length)
+	if (wordToTest.length) {
 		chrome.browserAction.setBadgeText({"text": '' + wordToTest.length});
-	else
+	} else {
 		chrome.browserAction.setBadgeText({"text": ''});
+	}	
 }
 </script>
 </html>

@@ -1,11 +1,16 @@
 body {
-  min-width:120px;
+  min-width:140px;
   padding-right:1em;
   text-align:right;
   overflow-x:hidden;
   overflow-y:scroll;
   line-height:1.4em;
   background-color:#DDDDFF;
+}
+
+#wordListBox {
+	padding: 0;
+	margin: 0;
 }
 
 .cancelButton {

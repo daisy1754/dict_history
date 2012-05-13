@@ -5,43 +5,55 @@
 <link href="words_window.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-<div id="content">
-
-</div>
+<div id="content"></div>
 <script type="text/javascript">
+
 var bg = chrome.extension.getBackgroundPage();
-MAX_LOG_SIZE = bg.getMaxLogSize();
-var wordList = bg.localStorage;
-var outputWords = {};
-var index = bg.getIndex();
-if (index >= 0){
-	var contentBody = document.getElementById('content');
-	for (var i=0; i<MAX_LOG_SIZE; i++) {
-		if (typeof wordList[index] == 'undefined'
-				|| wordList[index].length == 0
-				|| typeof outputWords[wordList[index]] != 'undefined') {
+var wordsToTest = JSON.parse(bg.localStorage['wordToTest']);
+if (wordsToTest.length > 0) {
+	startTest(wordsToTest);
+} else {
+	showRecordedWords();
+}
+
+function showRecordedWords() {
+	var bg = chrome.extension.getBackgroundPage();
+	var maxLogSize = bg.getMaxLogSize();
+	var wordList = bg.localStorage;
+	var outputWords = {};
+	var index = bg.getIndex();
+	if (index >= 0){
+		var contentBody = document.getElementById('content');
+		var wordsBox = document.createElement('div');
+		wordsBox.id = 'wordListBox';
+		contentBody.appendChild(wordsBox);
+		for (var i=0; i<maxLogSize; i++) {
+			if (typeof wordList[index] == 'undefined'
+					|| wordList[index].length == 0
+					|| typeof outputWords[wordList[index]] != 'undefined') {
+				index--;
+				if (index < 0) {
+					index = maxLogSize - 1;
+				}continue;
+			} else {
+				outputWords[wordList[index]] = true;
+			}
+			var wordContainer = document.createElement('div');
+			wordContainer.className = 'wordContainer';
+			wordContainer.id = wordList[index];
+			
+			var span = document.createElement('span');
+			var url = 'http://eow.alc.co.jp/' + wordList[index];
+			span.innerHTML = '<a href="' + url + '" target="_blank">' 
+				+ wordList[index] + '</a>';
+			wordContainer.appendChild(span);
+			wordContainer.addEventListener('mouseover', addButtons, false);
+			wordContainer.addEventListener('mouseout', dismissButtons, false);
+			wordsBox.appendChild(wordContainer);
 			index--;
 			if (index < 0) {
-				index = MAX_LOG_SIZE - 1;
-			}continue;
-		} else {
-			outputWords[wordList[index]] = true;
-		}
-		var dom = document.createElement('div');
-		dom.className = 'wordContainer';
-		dom.id = wordList[index];
-		
-		var span = document.createElement('span');
-		var url = 'http://eow.alc.co.jp/' + wordList[index];
-		span.innerHTML = '<a href="' + url + '" target="_blank">' 
-			+ wordList[index] + '</a>';
-		dom.appendChild(span);
-		dom.addEventListener('mouseover', addButtons, false);
-		dom.addEventListener('mouseout', dismissButtons, false);
-		contentBody.appendChild(dom);
-		index--;
-		if (index < 0) {
-			index = MAX_LOG_SIZE - 1;
+				index = maxLogSize - 1;
+			}
 		}
 	}
 }
@@ -62,7 +74,6 @@ function addButtons(event) {
 	tts.className = 'speakButton';
 	tts.innerHTML = '<';
 	tts.addEventListener('click', speakWord, false);
-	
 	
 	buttons = document.createElement('div');
 	buttons.className = 'buttons';
@@ -111,17 +122,46 @@ function speakWord(event) {
 	chrome.tts.speak(parentDiv.id, {'lang': 'en-US'});
 }
 
+function startTest(wordsToTest) {
+	var contentBody = document.getElementById('content');
+	var testBox = document.createElement('div');
+	testBox.id = 'testBox';
+	testBox.wordsToTest = wordsToTest;
+	contentBody.appendChild(testBox);
+	showWordToTest(wordsToTest[0], testBox)
+}
+
+function showWordToTest(word, parent) {
+	var wordBox = document.createElement('div');
+	wordBox.id = 'wordBox';
+	wordBox.innerHTML = word;
+	wordBox.addEventListener(
+		'click', function(){
+			parent.removeChild(wordBox);
+			fetchWordMeaning(word, parent);
+		}, false);
+	parent.appendChild(wordBox);
+}
+
+function fetchWordMeaning(word, parent) {
+	var meaningBox = document.createElement('div');
+	meaningBox.id = 'meaningBox';
+	meaningBox.innerHTML = 'nowLoading...';
+	parent.appendChild(meaningBox);
+	getJapaneseTranslation(word);
+}
+
 function getJapaneseTranslation(word) {
 	var searchUrl = "http://public.dejizo.jp/NetDicV09.asmx/SearchDicItemLite?"
 		+ "Dic=EJdict&Scope=HEADWORD&Prof=xml&Match=EXACT&Merge=OR&PageSize=1&"
 		+ "PageIndex=0&Word=" + word;
 	var request = new XMLHttpRequest();
 	request.open("GET", searchUrl, true);
-	request.onreadystatechange = function(){onItemListResponse(request);};
+	request.onreadystatechange = function(){onItemListResponse(word, request);};
   	request.send(null);
 }
 
-function onItemListResponse(request) {
+function onItemListResponse(word, request) {
 	if (request.readyState == 4 && request.status == 200) {
 		var xml = request.responseXML;
 		var nodes = xml.getElementsByTagName('ItemID');
@@ -146,9 +186,7 @@ function onItemListResponse(request) {
 						var meanings = nodes[i].getElementsByTagName('div');
 						if (meanings.length > 0) {
 							var meaning = meanings[0].firstChild.data;
-							var contentBody = document.getElementById('content');
-					
-							contentBody.innerHTML = meaning;
+							showWordMeaning(word, meaning);
 							return;
 						}
 					}
@@ -163,6 +201,39 @@ function onItemListResponse(request) {
   		request.send(null);
     }
 }
+
+function showWordMeaning(word, meaning) {
+	var meaningBox = document.getElementById('meaningBox');
+	meaningBox.innerHTML = '';
+	var meaningBlock = document.createElement('div');
+	meaningBlock.innerHTML = meaning;
+	meaningBox.appendChild(meaningBlock);
+	var okSpan = document.createElement('span');
+	var ngSpan = document.createElement('span');
+	okSpan.innerHTML = '覚えた';
+	ngSpan.innerHTML = 'まだ';
+	meaningBox.appendChild(okSpan);
+	meaningBox.appendChild(ngSpan);
+	okSpan.addEventListener('click', function(){testFinished(word, false);}, false);
+	ngSpan.addEventListener('click', function(){testFinished(word, true);}, false);
+}
+
+function testFinished(word, testOnceMore) {	
+	var bg = chrome.extension.getBackgroundPage();
+	bg.doneTest(word, testOnceMore);
+	var testBox = document.getElementById('testBox');
+	var meaningBox = document.getElementById('meaningBox');
+	testBox.removeChild(meaningBox);
+	wordsToTest = testBox.wordsToTest;
+	var currentWordIndex = wordsToTest.indexOf(word);
+	if (currentWordIndex == wordsToTest.length - 1) {
+		testBox.parentNode.removeChild(testBox);
+		showRecordedWords();
+	} else {
+		showWordToTest(wordsToTest[currentWordIndex + 1], testBox);
+	}
+}
+
 </script>
 </body>
 </html>
